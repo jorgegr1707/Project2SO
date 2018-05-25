@@ -12,6 +12,7 @@ int get_id_shared_memory(key_t, int);
 int *assign_shared_memory(key_t, int);
 int is_numeric(char [], int);
 int *assign_values_memory(int *, int);
+int get_random(int, int);
 
 
 #endif

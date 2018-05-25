@@ -36,18 +36,17 @@ struct proc_info
     int num_segment;       //0 if process is for paging
 };
 
-
 /****************************************************
-*Function that looks for space for the segment      *
+*Function that returns a list of available space    *
 *Parameters:                                        *
 *   request: Shared memory                          *
 *   number: Amount of pages or segments             *
 *****************************************************/
-int * search_segmentation(int *request, int number)
+int * search(int *request, int number)
 {
     int * list=(int *) malloc(sizeof(int)*number);
     int pos=0;
-    for( int i = 0;i < request_size[0]*sizeof(int);i=i+4)
+    for( int i = 0;i < request_size[0]*sizeof(int);i += 4)
     {
         
         /* Return the list of positions of available spaces */
@@ -59,77 +58,63 @@ int * search_segmentation(int *request, int number)
         /* Looking for space available in shared memory */
         else
         {
-            if(pos != 0 && i != 0)
+            /* Case is paging search */
+            if(type == 0)
             {
-                if( request[i - 4] == 0 )
+                if (request[i]==0)
+                {  
+                    list[pos]=i;
+                    pos++;
+                }
+            }
+
+            /* Case is segmentation search */
+            else
+            {
+                if(pos != 0 && i != 0)
                 {
-                    if (request[i] == 0)
+                    if( request[i - 4] == 0 )
+                    {
+                        if (request[i] == 0)
+                        {
+                            list[pos]=i;
+                            pos++;
+                        }
+                    }
+                    else
+                    {
+                        memset(list,0,sizeof(list));
+                        pos=0;
+                    }
+
+                }
+                else
+                {
+                    if (request[i]==0)
                     {
                         list[pos]=i;
                         pos++;
                     }
-                }
-                else
-                {
-                    memset(list,0,sizeof(list));
-                    pos=0;
-                }
 
+                }    
             }
-            else
-            {
-                if (request[i]==0)
-                {
-                    list[pos]=i;
-                    pos++;
-                }
 
-            }
         }
     }
     return NULL;
 }
 
-/****************************************************
-*Function that looks for space for pages            *
-*Parameters:                                        *
-*   request: Shared memory                          *
-*   number: Amount of pages or segments             *
-*****************************************************/
-int * search_paging(int *request, int number)
-{
-    int * list=(int *) malloc(sizeof(int)*number);
-    int pos=0;
-    for( int i = 0;i < request_size[0]*sizeof(int);i=i+4)
-    {
-        /* Return the list of positions of available spaces*/
-        if(pos==number)
-        {
-            return list;
-        }
-
-        /* Looking for space available in shared memory */
-        else
-        {
-            if (request[i]==0)
-            {  
-                list[pos]=i;
-                pos++;
-            }
-        }
-    }
-    return NULL;
-}
 
 /****************************************************
-*Function that writes in the file bitacora to record*
-*the progress of the process generator.             * 
+*Function that records the progress of the process  *
+*generator.                                         * 
 *Parameters:                                        *
 *   PID: id of process                              *
 *   action: Action to include in log file           *
+*   segment: Number of segment (only segmentation)  *
 *   line: Number of space to get involved           *
 *****************************************************/
-void write_log_paging (int PID, int action, int line)
+void write_log (int PID, int action, int segment, int line)
 {
 
     FILE *log;
@@ -140,7 +125,7 @@ void write_log_paging (int PID, int action, int line)
     
     if (log == NULL)
     {
-     printf("ERROR: Couldn't open the file bitacora.txt\n"); 
+        printf("ERROR: Couldn't open the file bitacora.txt\n"); 
     }
     
     /* Get the time */
@@ -148,73 +133,50 @@ void write_log_paging (int PID, int action, int line)
     time ( &time_process );
     struct tm * timeinfo = localtime ( &time_process );
 
-    /* Case of assign */
-    if(action == 0)
+    /* Case paging */
+    if(type == 0)
     {
-        fprintf(log, "Producer\n PID: %i; Action: %s; Time: %i:%i:%i; Line: %i\n", PID, "assign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, line);      
+        /* Case of assign */
+        if(action == 0)
+        {
+            fprintf(log, "PID: %i; Action: %s; Time: %i:%i:%i; Line: %i\n", PID, "assign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, line);      
+        }
+
+        /* Case of unassign */
+        else if (action == 1)
+        {
+            fprintf(log, "PID: %i; Action: %s; Time: %i:%i:%i; Line: %i\n", PID, "unassign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, line);      
+        } 
+
+        /*Couldn't found space */
+        else if (action == 2)
+        {
+            fprintf(log, "PID: %i; Dead: %s; Time: %i:%i:%i\n", PID, "Couldn't found memory", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);      
+        }
     }
 
-    /* Case of unassign */
-    else if (action == 1)
+    /* Case segmentation */
+    else
     {
-        fprintf(log, "Producer\n PID: %i; Action: %s; Time: %i:%i:%i; Line: %i\n", PID, "unassign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, line);      
-    } 
+        /* Case of assign */
+        if(action == 0)
+        {
+            fprintf(log, "PID: %i; Action: %s; Time: %i:%i:%i; Segment: %i; Line: %i\n", PID, "assign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, segment, line);      
+        }
 
-    /*Couldn't found space */
-    else if (action == 2)
-    {
-        fprintf(log, "Producer\n PID: %i; Dead: %s; Hora: %i:%i:%i\n", PID, "Couldn't found memory", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);      
-    } 
-    
-    fclose(log);
-}
+        /* Case of unassign */
+        else if (action == 1)
+        {
+            fprintf(log, "PID: %i; Action: %s; Time: %i:%i:%i; Segment: %i; Line: %i\n", PID, "unassign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, segment, line);      
+        }
 
-/****************************************************
-*Function that writes in the file bitacora to record*
-*the progress of the process generator.             * 
-*Parameters:                                        *
-*   PID: id of process                              *
-*   action: Action to include in log file           *
-*   segment: Number of segment                      *
-*   line: Number of space to get involved           *
-*****************************************************/
-void write_log_segmentation (int PID, int action, int segment, int line)
-{
-
-
-    FILE *log;
-
-    char filename[] = "bitacora.txt";
-    
-    log = fopen(filename, "a");
-    
-    if (log == NULL)
-    {
-     printf("ERROR: Couldn't open the file bitacora.txt\n"); 
+        /* Couldn't found space */
+        else if (action == 2)
+        {
+            fprintf(log, "PID: %i; Dead: %s; Time: %i:%i:%i\n", PID, "couldn't found memory", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);      
+        }  
     }
-    
-    /* Get the time */
-    time_t time_process;
-    time ( &time_process );
-    struct tm * timeinfo = localtime ( &time_process );
-
-    /* Case of assign */
-    if(action == 0)
-    {
-        fprintf(log, "Producer\n PID: %i; Action: %s; Time: %i:%i:%i; Segment: %i; Line: %i\n", PID, "assign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, segment, line);      
-    }
-
-    /* Case of unassign */
-    else if (action == 1)
-    {
-        fprintf(log, "Producer\n PID: %i; Action: %s; Time: %i:%i:%i; Segment: %i; Line: %i\n", PID, "unassign", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, segment, line);      
-    }
-
-    /* Couldn't found space */
-    else if (action == 2)
-    {
-        fprintf(log, "Producer\n PID: %i; Dead: %s; Time: %i:%i:%i\n", PID, "couldn't found memory", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);      
-    } 
+     
     
     fclose(log);
 }
@@ -260,24 +222,22 @@ void* threadfunc(void *param)
             /* Write the progress in log*/
             if(type == 1)
             {
-               write_log_segmentation(proc, 0, (*process).num_segment , space[i]/4); 
+               write_log(proc, 0, (*process).num_segment , space[i]/4); 
             }
             else if (type == 0)
             {
-                write_log_paging(proc, 0, space[i]/4);    
+                write_log(proc, 0, 0, space[i]/4);    
             }
             
         }
-        print_shared_memory();
-
         /* Exit semaphore */
         sem_post(main_semaphore);
-        printf("\n\nExit main semaphore: Process #%d \n\n",proc);
+        printf("\nExit main semaphore: Process #%d \n",proc);
 
         /* Sleep time to simulate work */
-        int time_sleep= 30 + rand() % (60+1 - 30);
+        int time_sleep= get_random(30, 60);
         sleep(time_sleep);
-        printf("\n\nRequest main semaphore: Process #%d \n\n",proc);
+        printf("\nRequest main semaphore: Process #%d \n",proc);
         sem_wait(main_semaphore);
 
         /* Process finish (case paging) */
@@ -292,7 +252,7 @@ void* threadfunc(void *param)
             /* Report on log */
             for(int i=0;i<number;i++)
             {
-                write_log_paging(proc, 1, space[i]/4);    
+                write_log(proc, 1, 0, space[i]/4);    
             }
             
         }
@@ -305,7 +265,7 @@ void* threadfunc(void *param)
             {
                 int j=space[i];
                 request_shared_memory[j]=0;
-                write_log_segmentation(proc, 1,  (*process).num_segment, space[i]/4); 
+                write_log(proc, 1,  (*process).num_segment, space[i]/4); 
             }
             count_segments[proc] -= number;
 
@@ -315,9 +275,8 @@ void* threadfunc(void *param)
                 process_shm[(proc*8)+4] = 1;
             }
         }
-        print_shared_memory();
         sem_post(main_semaphore);
-        printf("\n\nExit main semaphore: Process #%d \n\n",proc);   
+        printf("\nExit main semaphore: Process #%d \n",proc);   
 }
 
 /****************************************************
@@ -330,35 +289,25 @@ void* threadfunc(void *param)
 *****************************************************/
 int * finding(int * request, int number, int type)
 {
-    int i=0;
-    int* n;
+    int times=0;
+    int* available_space;
 
     /* Maximum time to execute (31s)*/
-    while(i<31)
+    while(times<31)
     {
-        /* Case paging */
-        if(type==0)
-        {
-           n=search_paging(request, number);
+        available_space = search(request, number);
 
-        }
-
-        /* Case segmentation */
-        else
-        {
-            n=search_segmentation(request,number);
-        }
 
         /* Case it couldn't found available space */
-        if(n==NULL)
+        if(available_space==NULL)
         {
            sleep(1);
-           i++;
+           times++;
            printf("Finding\n");
         }
         else
         {
-            return n; 
+            return available_space; 
         }
     }
     return NULL;
@@ -369,71 +318,71 @@ int * finding(int * request, int number, int type)
 *************************************************/
 void pagination()
 {
-    int idprocess = 0; 
+    int id_process = 0; 
     struct proc_info *process;  
 
         while(request_size[1]==0)
         {
 
             /* Create thread and process */
-            pthread_t *mythread;
-            mythread = (pthread_t *)malloc(sizeof(*mythread));
+            pthread_t *principal_thread;
+            principal_thread = (pthread_t *)malloc(sizeof(*principal_thread));
             process = malloc(sizeof(struct proc_info));
 
-            idprocess++;
+            id_process++;
 
             /* Get number of pages */
-            int number= 1 + rand() % (10+1 - 1);
-            printf("\n\nPages to assign: %d.\n\n", number);
-            printf("\n\nRequest main semaphore: Process# %d\n\n",idprocess);
+            int count_pages= get_random(1,10);
+            printf("\nPages to assign: %d.\n", count_pages);
+            printf("\nRequest main semaphore: Process# %d\n",id_process);
 
 
             sem_wait(main_semaphore);
             sem_wait(process_semaphore);
 
             /* Looking for space available*/
-            process_shm[idprocess*8] = idprocess;
-            process_shm[(idprocess*8)+4] = 3;
-            printf("\n\nWaiting (LOCK): Process # %d\n\n",idprocess);
+            process_shm[id_process*8] = id_process;
+            process_shm[(id_process*8)+4] = 3;
+            printf("\nWaiting (LOCK): Process # %d\n",id_process);
             sem_post(process_semaphore);
-            int * space=finding(request_shared_memory,number,type);
-            printf("\n\nExit from waiting (UNLOCK): Process # %d\n\n",idprocess);
+            int * space=finding(request_shared_memory,count_pages,type);
+            printf("\nExit from waiting (UNLOCK): Process # %d\n",id_process);
 
             /* Store information of process */
-            (*process).id_process = idprocess;
-            (*process).size_amount_pages = number;
+            (*process).id_process = id_process;
+            (*process).size_amount_pages = count_pages;
             process->space = space;
             (*process).num_segment = 0;
 
             /* Case that space is available */
             if(space != NULL)
             {
-                printf("\n\nRequest process semaphore: Process # %d\n\n",idprocess);
+                printf("\nRequest process semaphore: Process # %d\n",id_process);
                 sem_wait(process_semaphore); 
-                process_shm[(idprocess*8)+4] = 0; // Assign value that process is active 
+                process_shm[(id_process*8)+4] = 0; // Assign value that process is active 
                 sem_post(process_semaphore); 
-                printf("\n\nExit process semaphore: Process # %d\n\n",idprocess);
-                pthread_create(mythread, NULL,threadfunc, (void *)process);
+                printf("\nExit process semaphore: Process # %d\n",id_process);
+                pthread_create(principal_thread, NULL,threadfunc, (void *)process);
             }
 
             /* Case that space is not available (process die) */
             else
             {
-                printf("\n\nDie: Process # %d\n\n",idprocess);
-                printf("\n\nRequest process semaphore: Process # %d\n\n",idprocess); 
+                printf("\nDie: Process # %d\n",id_process);
+                printf("\nRequest process semaphore: Process # %d\n",id_process); 
                 sem_wait(process_semaphore);
-                process_shm[(idprocess*8)+4] = 2; // Assign value that process die because he couldn't found space
+                process_shm[(id_process*8)+4] = 2; // Assign value that process die because he couldn't found space
                 sem_post(process_semaphore); 
-                printf("\n\nExit process semaphore: Process # %d\n\n",idprocess);
-                write_log_paging(idprocess, 2, 0);
+                printf("\nExit process semaphore: Process # %d\n",id_process);
+                write_log(id_process, 2, 0, 0);
                 sem_post(main_semaphore);
-                printf("\n\nExit main semaphore: Process # %d \n\n",idprocess);
+                printf("\nExit main semaphore: Process # %d \n",id_process);
             }
 
             /*Waiting time to generate new process */
-            int waitb= 20 + rand() % (60+1 - 20);
+            int waiting_time= get_random(20, 60);
             
-            sleep(waitb);
+            sleep(waiting_time);
         }
 
 }
@@ -443,80 +392,84 @@ void pagination()
 *************************************************/
 void segmentation()
 {
-    int idprocess = 0;
+    int id_process = 0;
     struct proc_info *process;
 
         while(request_size[1]==0)
         {
-            pthread_t *mythread;
-            mythread = (pthread_t *)malloc(sizeof(*mythread));
-            idprocess++;
+            /* Create thread */
+            pthread_t *principal_thread;
+            principal_thread = (pthread_t *)malloc(sizeof(*principal_thread));
+            id_process++;
             
             /* Number of segments */
-            int segs= 1 + rand() % (5+1 - 1);
+            int total_segments= get_random(1, 5);
             
             /* Assign number of lines for each segment */
-            for(int i=0;i<segs;i++)
+            for(int i=0;i<total_segments;i++)
             {
-                /*Get */
                 process = malloc(sizeof(struct proc_info));
-                int number= 1 + rand() % (3+1 - 1);
-                count_segments[idprocess] += number; 
-                printf("\n\nShould be assign %d línes.\n\n", number);        
-                int *space=(int *) malloc(sizeof(int)*number);
-                printf("\n\nRequest semaphore: Process # %d\n\n",idprocess);
+
+                /* Get size of segment */
+                int size_segment= get_random(1, 3);
+                count_segments[id_process] += size_segment; 
+                printf("Should be assign %d línes.\n", size_segment);        
+                int *space=(int *) malloc(sizeof(int)*size_segment);
+                printf("\nRequest semaphore: Process # %d\n",id_process);
                 sem_wait(main_semaphore);
                 sem_wait(process_semaphore);
-                process_shm[idprocess*8] = idprocess;
-                process_shm[(idprocess*8)+4] = 3; // buscando (: 
-                printf("\n\nWaiting(LOCK): Process # %d\n\n",idprocess);
+
+                /* Looking for available space */
+                process_shm[id_process*8] = id_process;
+                process_shm[(id_process*8)+4] = 3;  
+                printf("\nWaiting(LOCK): Process # %d\n",id_process);
                 sem_post(process_semaphore);
-                space=finding(request_shared_memory,number,type);
-                printf("\n\nExit from waiting (UNLOCK): Process # %d\n\n",idprocess);
+                space=finding(request_shared_memory,size_segment,type);
+                printf("\nExit from waiting (UNLOCK): Process # %d\n",id_process);
 
-
-                (*process).id_process = idprocess;
-                (*process).size_amount_pages = number;
+                /* Store information of process */
+                (*process).id_process = id_process;
+                (*process).size_amount_pages = size_segment;
                 process->space = space;
                 (*process).num_segment = i;
                 if(space!=NULL)
                 {
-                    printf("\n\nRequest process semaphore: Process # %d \n\n",idprocess);
+                    printf("\nRequest process semaphore: Process # %d \n",id_process);
                     sem_wait(process_semaphore);
-                    process_shm[(idprocess*8)+4] = 0; // vivo (: 
+                    process_shm[(id_process*8)+4] = 0; 
                     sem_post(process_semaphore);
-                    printf("\n\nExit process semaphore: Process # %d \n\n",idprocess);
-                    pthread_create(mythread, NULL,threadfunc, (void *)process);
+                    printf("\nExit process semaphore: Process # %d \n",id_process);
+                    pthread_create(principal_thread, NULL,threadfunc, (void *)process);
                     
                 }
                 else
                 { 
-                    printf("\n\nMuere: Proceso # %d\n\n",idprocess);
-                    printf("\n\nRequest process semaphore: Process # %d \n\n",idprocess);
+                    printf("\nDie: Process # %d\n",id_process);
+                    printf("\nRequest process semaphore: Process # %d \n",id_process);
                     sem_wait(process_semaphore);
-                    process_shm[(idprocess*8)+4] = 2; // murio porq no encontro :( 
+                    process_shm[(id_process*8)+4] = 2; 
                     sem_post(process_semaphore);
-                    printf("\n\nExit process semaphore: Process # %d \n\n",idprocess);
-                    write_log_segmentation(idprocess, 2, i, 0); 
+                    printf("\nExit process semaphore: Process # %d \n",id_process);
+                    write_log(id_process, 2, i, 0); 
                     sem_post(main_semaphore);
-                    printf("\n\nExit main semaphore: Process # %d \n\n",idprocess);
+                    printf("\nExit main semaphore: Process # %d \n",id_process);
                 }
                 
             }
-            int waitb= 20 + rand() % (60+1 - 20);
-            sleep(waitb);
+            int waiting_time= get_random(20, 60);
+            sleep(waiting_time);
         }
 
 }
 
 
-void print_list(int* list,int number)
+/*void print_list(int* list,int number)
 {
     for(int i=0; i<number;i++)
     {
         printf("Element %d: %d\n",i, list[i]);
     }
-}
+}*/
 
 
 int main(int argc, char *argv[])
@@ -528,13 +481,14 @@ int main(int argc, char *argv[])
         request_memory_key = 1235;
         processes_key = 1236;
 
+        srand(time(NULL));
         int shmid = get_id_shared_memory(request_memory_key, sizeof(int));
         request_size = shmat(shmid, (void *)0, 0);
         request_size[2]=1;
        
         int shmI = get_id_shared_memory(shared_memory_key, request_size[0]*sizeof(int)); 
         request_shared_memory = shmat(shmI, (void *)0, 0);
-        printf("\n\nStart semaphores.\n\n");
+        printf("\nStart semaphores.\n");
         main_semaphore = sem_open(MAIN_SEMAPHORE, O_CREAT, 0644, 1); 
         sem_init(main_semaphore, 0, 1);
         process_semaphore = sem_open(PROCESS_SEMAPHORE, O_CREAT, 0644, 1); 

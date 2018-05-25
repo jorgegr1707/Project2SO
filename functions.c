@@ -110,3 +110,17 @@ int *assign_values_memory(int *shared_memory, int size)
     }
     return shared_memory;
 }
+
+/*****************************************************
+*Function that return a random value from the range  *
+*[lower, upper].                                     *
+*Parameters:                                         *
+*   lower: Integer value that represents the minimum *
+*           value to get.                            *
+*   upper: Integer value that represents the maximum *
+*           value to get.                            *
+******************************************************/
+int get_random(int lower, int upper)
+{
+    return (rand() % (upper - lower + 1)) + lower;
+}
