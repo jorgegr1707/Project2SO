@@ -343,10 +343,10 @@ void pagination()
             /* Looking for space available*/
             process_shm[id_process*8] = id_process;
             process_shm[(id_process*8)+4] = 3;
-            printf("\nWaiting (LOCK): Process # %d\n",id_process);
+            printf("\nWaiting: Process # %d\n",id_process);
             sem_post(process_semaphore);
             int * space=finding(request_shared_memory,count_pages,type);
-            printf("\nExit from waiting (UNLOCK): Process # %d\n",id_process);
+            printf("\nFinish waiting: Process # %d\n",id_process);
 
             /* Store information of process */
             (*process).id_process = id_process;
@@ -422,10 +422,10 @@ void segmentation()
                 /* Looking for available space */
                 process_shm[id_process*8] = id_process;
                 process_shm[(id_process*8)+4] = 3;  
-                printf("\nWaiting(LOCK): Process # %d\n",id_process);
+                printf("\nWaiting: Process # %d\n",id_process);
                 sem_post(process_semaphore);
                 space=finding(request_shared_memory,size_segment,type);
-                printf("\nExit from waiting (UNLOCK): Process # %d\n",id_process);
+                printf("\nFinish waiting: Process # %d\n",id_process);
 
                 /* Store information of process */
                 (*process).id_process = id_process;
