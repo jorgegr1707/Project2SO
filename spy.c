@@ -31,24 +31,27 @@ void spy_memory()
 {
 
 	/* Attached shared memory */
-	int shmid = get_id_shared_memory(request_memory_key, sizeof(int));
-	request_size = shmat(shmid, (void *)0, 0);
+	//int shmid = get_id_shared_memory(request_memory_key, sizeof(int));
+	//request_size = shmat(shmid, (void *)0, 0);
+	request_size = assign_shared_memory(request_memory_key, sizeof(int));
 
-	int shmI = get_id_shared_memory(shared_memory_key, request_size[0]*sizeof(float)); 
-	request_shared_memory = shmat(shmI, (void *)0, 0);
+	//int shmI = get_id_shared_memory(shared_memory_key, request_size[0]*sizeof(float)); 
+	//request_shared_memory = shmat(shmI, (void *)0, 0);
+	int size_shared_memory = request_size[0]*sizeof(float);
+	request_shared_memory = assign_shared_memory(shared_memory_key, sizeof(float));
 	
 	/* Initial configure of sempahore*/
 	main_semaphore = sem_open(MAIN_SEMAPHORE, 0); 
-	int value;
-	sem_getvalue(main_semaphore, &value);
+	int value_semaphore;
+	sem_getvalue(main_semaphore, &value_semaphore);
  
  	/*
  	See if semaphore is lock
 	Reference: http://man7.org/linux/man-pages/man3/sem_getvalue.3.html
  	*/
-    while(value == 0)
+    while(value_semaphore == 0)
     {
-    	sem_getvalue(main_semaphore, &value);
+    	sem_getvalue(main_semaphore, &value_semaphore);
     	sleep(1); 
     }
 
@@ -73,16 +76,16 @@ void spy_processes()
   
     /*Initial configure semaphore*/
     process_semaphore = sem_open(PROCESS_SEMAPHORE, 0);
-	int value;
-	sem_getvalue(process_semaphore, &value);
+	int value_semaphore;
+	sem_getvalue(process_semaphore, &value_semaphore);
 
  	/*
  	See if semaphore is lock
 	Reference: http://man7.org/linux/man-pages/man3/sem_getvalue.3.html
  	*/
-    while(value == 0)
+    while(value_semaphore == 0)
     {
-    	sem_getvalue(process_semaphore, &value);
+    	sem_getvalue(process_semaphore, &value_semaphore);
     	sleep(1); 
     }
 
@@ -111,8 +114,8 @@ void spy_processes()
 	                break;
 	        }
     	}
-     }
-     sem_post(process_semaphore); 
+    }
+    sem_post(process_semaphore); 
 }
 
     
@@ -120,16 +123,29 @@ void spy_processes()
 int main(int argc, char *argv[])
 {
 
+	if(argc < 2 || argc > 2)
+	{
+		printf("Enter correct parameter \n\t1. See memory\n\t2. State of processes\n");
+		exit(0);
+	}
+
+	char input[10];
+	strcpy(input, argv[1]);
+
+	int length = strlen(input);
+
+	if(!is_numeric(input, length))
+	{
+
+		printf("Enter correct parameter \n\t1. See memory\n\t2. State of processes\n");
+		exit(0);
+	}
+
 	shared_memory_key = 1234;
     request_memory_key = 1235;
     processes_key = 1236;
 
-
-	if(argc < 2 || argc > 2)
-	{
-		printf("Enter correct parameter, \n->1 See memory\n->2 State of processes\n (:");
-	}
-	else if(atoi(argv[1])==1)
+	if(atoi(argv[1])==1)
 	{
 		spy_memory();
 	}
@@ -139,7 +155,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		printf("Enter correct parameter, \n->1 See memory\n->2 State of processes\n (:");
+		printf("Enter correct parameter \n\t1. See memory\n\t2. State of processes\n");
 	}
-   return 0;
+   	return 0;
 }

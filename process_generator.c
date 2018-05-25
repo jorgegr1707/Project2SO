@@ -558,6 +558,10 @@ int main(int argc, char *argv[])
             printf("Segmentation\n");
             segmentation();
         }
+        else
+        {
+            printf("ERROR: Only two values are possible:\n\t0. Paging\n\t1. Segmentation\n");
+        }
         request_size[1]=2;
         printf("Finish assign\n");
     }

@@ -1,16 +1,78 @@
 Producer
- PID: 1; Action: assign; Time: 9:14:44; Line: 0
+ PID: 1; Action: assign; Time: 11:54:14; Line: 0
 Producer
- PID: 1; Action: assign; Time: 9:14:44; Line: 1
+ PID: 1; Action: assign; Time: 11:54:14; Line: 1
 Producer
- PID: 1; Action: assign; Time: 9:14:44; Line: 2
+ PID: 1; Action: assign; Time: 11:54:14; Line: 2
 Producer
- PID: 1; Action: assign; Time: 9:14:44; Line: 3
+ PID: 1; Action: assign; Time: 11:54:14; Line: 3
 Producer
- PID: 1; Action: unassign; Time: 9:15:17; Line: 0
+ PID: 1; Action: unassign; Time: 11:54:47; Line: 0
 Producer
- PID: 1; Action: unassign; Time: 9:15:17; Line: 1
+ PID: 1; Action: unassign; Time: 11:54:47; Line: 1
 Producer
- PID: 1; Action: unassign; Time: 9:15:17; Line: 2
+ PID: 1; Action: unassign; Time: 11:54:47; Line: 2
 Producer
- PID: 1; Action: unassign; Time: 9:15:17; Line: 3
+ PID: 1; Action: unassign; Time: 11:54:47; Line: 3
+Producer
+ PID: 2; Action: assign; Time: 11:55:10; Line: 0
+Producer
+ PID: 2; Action: assign; Time: 11:55:10; Line: 1
+Producer
+ PID: 2; Action: assign; Time: 11:55:10; Line: 2
+Producer
+ PID: 2; Action: assign; Time: 11:55:10; Line: 3
+Producer
+ PID: 2; Action: assign; Time: 11:55:10; Line: 4
+Producer
+ PID: 2; Action: assign; Time: 11:55:10; Line: 5
+Producer
+ PID: 3; Action: assign; Time: 11:55:37; Line: 6
+Producer
+ PID: 3; Action: assign; Time: 11:55:37; Line: 7
+Producer
+ PID: 3; Action: assign; Time: 11:55:37; Line: 8
+Producer
+ PID: 3; Action: assign; Time: 11:55:37; Line: 9
+Producer
+ PID: 3; Action: assign; Time: 11:55:37; Line: 10
+Producer
+ PID: 3; Action: assign; Time: 11:55:37; Line: 11
+Producer
+ PID: 3; Action: assign; Time: 11:55:37; Line: 12
+Producer
+ PID: 2; Action: unassign; Time: 11:55:58; Line: 0
+Producer
+ PID: 2; Action: unassign; Time: 11:55:58; Line: 1
+Producer
+ PID: 2; Action: unassign; Time: 11:55:58; Line: 2
+Producer
+ PID: 2; Action: unassign; Time: 11:55:58; Line: 3
+Producer
+ PID: 2; Action: unassign; Time: 11:55:58; Line: 4
+Producer
+ PID: 2; Action: unassign; Time: 11:55:58; Line: 5
+Producer
+ PID: 3; Action: unassign; Time: 11:56:24; Line: 6
+Producer
+ PID: 3; Action: unassign; Time: 11:56:24; Line: 7
+Producer
+ PID: 3; Action: unassign; Time: 11:56:24; Line: 8
+Producer
+ PID: 3; Action: unassign; Time: 11:56:24; Line: 9
+Producer
+ PID: 3; Action: unassign; Time: 11:56:24; Line: 10
+Producer
+ PID: 3; Action: unassign; Time: 11:56:24; Line: 11
+Producer
+ PID: 3; Action: unassign; Time: 11:56:24; Line: 12
+Producer
+ PID: 4; Action: assign; Time: 11:56:29; Line: 0
+Producer
+ PID: 4; Action: assign; Time: 11:56:29; Line: 1
+Producer
+ PID: 4; Action: unassign; Time: 11:57:12; Line: 0
+Producer
+ PID: 4; Action: unassign; Time: 11:57:12; Line: 1
+Producer
+ PID: 5; Action: assign; Time: 11:57:16; Line: 0
