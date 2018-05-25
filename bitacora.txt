@@ -1,0 +1,16 @@
+Producer
+ PID: 1; Action: assign; Time: 9:14:44; Line: 0
+Producer
+ PID: 1; Action: assign; Time: 9:14:44; Line: 1
+Producer
+ PID: 1; Action: assign; Time: 9:14:44; Line: 2
+Producer
+ PID: 1; Action: assign; Time: 9:14:44; Line: 3
+Producer
+ PID: 1; Action: unassign; Time: 9:15:17; Line: 0
+Producer
+ PID: 1; Action: unassign; Time: 9:15:17; Line: 1
+Producer
+ PID: 1; Action: unassign; Time: 9:15:17; Line: 2
+Producer
+ PID: 1; Action: unassign; Time: 9:15:17; Line: 3
